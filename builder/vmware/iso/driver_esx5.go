@@ -142,7 +142,8 @@ func (d *ESX5Driver) ToolsIsoPath(string) string {
 }
 
 func (d *ESX5Driver) ToolsInstall() error {
-	return d.sh("vim-cmd", "vmsvc/tools.install", d.vmId)
+	//return d.sh("vim-cmd", "vmsvc/tools.install", d.vmId)
+	return nil
 }
 
 func (d *ESX5Driver) DhcpLeasesPath(string) string {

@@ -1,6 +1,7 @@
 package iso
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -50,10 +51,12 @@ func (d *localOutputDir) MkdirAll() error {
 }
 
 func (d *localOutputDir) Remove(path string) error {
+	log.Printf("XXX Berne: output_dir.go localOutputDir Remove %s", path)
 	return os.Remove(path)
 }
 
 func (d *localOutputDir) RemoveAll() error {
+	log.Printf("XXX Berne: output_dir.go localOutputDir RemoveAll %s", d.dir)
 	return os.RemoveAll(d.dir)
 }
 

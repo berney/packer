@@ -3,6 +3,7 @@ package iso
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -157,6 +158,7 @@ func (s *stepCreateVMX) Run(state multistep.StateBag) multistep.StepAction {
 
 func (s *stepCreateVMX) Cleanup(multistep.StateBag) {
 	if s.tempDir != "" {
+		log.Printf("XXX Berne: step_create_vmx.go Cleanup RemoveAll %s", s.tempDir)
 		os.RemoveAll(s.tempDir)
 	}
 }

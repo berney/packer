@@ -76,6 +76,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 		},
 	}, raws...)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/builder.go Prepare config.Decode error")
 		return nil, err
 	}
 
@@ -179,6 +180,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 	}
 
 	if errs != nil && len(errs.Errors) > 0 {
+		log.Printf("XXX Berne: builder/vmware/iso/builder.go Prepare errors: %d", len(errs.Errors))
 		return warnings, errs
 	}
 
@@ -195,8 +197,10 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 	var dir OutputDir
 	switch d := driver.(type) {
 	case OutputDir:
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run driver interface is OutputDir, using dir = d")
 		dir = d
 	default:
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run driver interface is NOT OutputDir, using dir = new(vmcommon.LocalOutputDir)")
 		dir = new(vmwcommon.LocalOutputDir)
 	}
 	if b.config.RemoteType != "" && b.config.Format != "" {
@@ -316,6 +320,7 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 
 	// If there was an error, return that
 	if rawErr, ok := state.GetOk("error"); ok {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run ok rawError.(error)")
 		return nil, rawErr.(error)
 	}
 
@@ -330,14 +335,18 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 
 	// Compile the artifact list
 	var files []string
-	if b.config.RemoteType != "" {
+	log.Printf("XXX Berne: builder/vmware/iso/builder.go Run compile artifact list RemoteType: %s", b.config.RemoteType)
+	if b.config.RemoteType == "" {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run compile artifact list RemoteType == \"\", I inverted this, using local filesystem.")
 		dir = new(vmwcommon.LocalOutputDir)
 		dir.SetOutputDir(b.config.OutputDir)
 		files, err = dir.ListFiles()
 	} else {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run compile artifact list RemoteType != \"\", I inverted this, using driver (remote filesystem).")
 		files, err = state.Get("dir").(OutputDir).ListFiles()
 	}
 	if err != nil {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go Run compile artifact list error")
 		return nil, err
 	}
 
@@ -364,14 +373,17 @@ func (b *Builder) Cancel() {
 func (b *Builder) validateVMXTemplatePath() error {
 	f, err := os.Open(b.config.VMXTemplatePath)
 	if err != nil {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go validateVMXTemplatePath Open error")
 		return err
 	}
 	defer f.Close()
 
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
+		log.Println("XXX Berne: builder/vmware/iso/builder.go validateVMXTemplatePath ReadAll error")
 		return err
 	}
 
+	log.Println("XXX Berne: builder/vmware/iso/builder.go validateVMXTemplatePath default return interpolate.Validate")
 	return interpolate.Validate(string(data), &b.config.ctx)
 }

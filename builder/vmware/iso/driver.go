@@ -2,7 +2,7 @@ package iso
 
 import (
 	"fmt"
-
+	"log"
 	vmwcommon "github.com/mitchellh/packer/builder/vmware/common"
 )
 
@@ -12,6 +12,7 @@ func NewDriver(config *Config) (vmwcommon.Driver, error) {
 	drivers := []vmwcommon.Driver{}
 
 	if config.RemoteType == "" {
+		log.Printf("XXX Berne: builder/vmware/iso/driver.go NewDriver return vmwcommon.NewDriver...")
 		return vmwcommon.NewDriver(&config.DriverConfig, &config.SSHConfig)
 	}
 

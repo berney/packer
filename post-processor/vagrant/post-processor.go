@@ -7,6 +7,7 @@ import (
 	"compress/flate"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -91,6 +92,7 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 	if err != nil {
 		return nil, false, err
 	}
+	log.Printf("XXX Berne: post-process.go PostProcessProvider Defer RemoveAll dir %s", dir)
 	defer os.RemoveAll(dir)
 
 	// Copy all of the includes files into the temporary directory
@@ -99,6 +101,7 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 		dst := filepath.Join(dir, filepath.Base(src))
 		if err := CopyContents(dst, src); err != nil {
 			err = fmt.Errorf("Error copying include file: %s\n\n%s", src, err)
+			log.Printf("XXX Berne: post-process.go PostProcessProvider returning CopyContents error, so RemoveAll dir %s will FIRE", dir)
 			return nil, false, err
 		}
 	}
@@ -106,11 +109,13 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 	// Run the provider processing step
 	vagrantfile, metadata, err := provider.Process(ui, artifact, dir)
 	if err != nil {
+		log.Printf("XXX Berne: post-process.go PostProcessProvider returning provider.Process error, so RemoveAll dir %s will FIRE", dir)
 		return nil, false, err
 	}
 
 	// Write the metadata we got
 	if err := WriteMetadata(dir, metadata); err != nil {
+		log.Printf("XXX Berne: post-process.go PostProcessProvider returning WriteMetadata error, so RemoveAll dir %s will FIRE", dir)
 		return nil, false, err
 	}
 
@@ -120,6 +125,7 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 		ui.Message(fmt.Sprintf("Using custom Vagrantfile: %s", config.VagrantfileTemplate))
 		customBytes, err := ioutil.ReadFile(config.VagrantfileTemplate)
 		if err != nil {
+			log.Printf("XXX Berne: post-process.go PostProcessProvider returning customer Vagrantfile ReadFile error, so RemoveAll dir %s will FIRE", dir)
 			return nil, false, err
 		}
 
@@ -128,6 +134,7 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 
 	f, err := os.Create(filepath.Join(dir, "Vagrantfile"))
 	if err != nil {
+		log.Printf("XXX Berne: post-process.go PostProcessProvider returning create Vagrantfile error, so RemoveAll dir %s will FIRE", dir)
 		return nil, false, err
 	}
 
@@ -138,14 +145,17 @@ func (p *PostProcessor) PostProcessProvider(name string, provider Provider, ui p
 	})
 	f.Close()
 	if err != nil {
+		log.Printf("XXX Berne: post-process.go PostProcessProvider returning Template error, so RemoveAll dir %s will FIRE", dir)
 		return nil, false, err
 	}
 
 	// Create the box
 	if err := DirToBox(outputPath, dir, ui, config.CompressionLevel); err != nil {
+		log.Printf("XXX Berne: post-process.go PostProcessProvider returning DirToBox error, so RemoveAll dir %s will FIRE", dir)
 		return nil, false, err
 	}
 
+	log.Printf("XXX Berne: post-process.go PostProcessProvider returning NewArtifact, so RemoveAll dir %s will FIRE", dir)
 	return NewArtifact(name, outputPath), provider.KeepInputArtifact(), nil
 }
 

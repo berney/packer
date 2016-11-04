@@ -2,6 +2,7 @@ package iso
 
 import (
 	"fmt"
+	"log"
 )
 
 // Artifact is the result of running the VMware builder, namely a set
@@ -33,5 +34,6 @@ func (a *Artifact) State(name string) interface{} {
 }
 
 func (a *Artifact) Destroy() error {
+	log.Printf("XXX Berne: builder/vmware/iso/artifact.go Artifact::Destroy Remove %s", a.dir)
 	return a.dir.RemoveAll()
 }

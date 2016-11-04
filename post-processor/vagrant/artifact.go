@@ -2,6 +2,7 @@ package vagrant
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -40,5 +41,6 @@ func (a *Artifact) State(name string) interface{} {
 }
 
 func (a *Artifact) Destroy() error {
+	log.Printf("XXX Berne: artifact.go Artifact::Destroy Remove %s", a.Path)
 	return os.Remove(a.Path)
 }

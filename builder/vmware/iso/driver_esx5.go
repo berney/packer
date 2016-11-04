@@ -48,18 +48,21 @@ func (d *ESX5Driver) CompactDisk(diskPathLocal string) error {
 
 func (d *ESX5Driver) CreateDisk(diskPathLocal string, size string, typeId string) error {
 	diskPath := d.datastorePath(diskPathLocal)
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go CreateDisk return d.sh(vmkfstools...")
 	return d.sh("vmkfstools", "-c", size, "-d", typeId, "-a", "lsilogic", diskPath)
 }
 
 func (d *ESX5Driver) IsRunning(string) (bool, error) {
 	state, err := d.run(nil, "vim-cmd", "vmsvc/power.getstate", d.vmId)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go IsRunning d.run vim-cmd vmsvc/power.getstate error")
 		return false, err
 	}
 	return strings.Contains(state, "Powered on"), nil
 }
 
 func (d *ESX5Driver) ReloadVM() error {
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go ReloadVM returning d.sh vim-cmd vmsvc/reload...")
 	return d.sh("vim-cmd", "vmsvc/reload", d.vmId)
 }
 
@@ -67,11 +70,13 @@ func (d *ESX5Driver) Start(vmxPathLocal string, headless bool) error {
 	for i := 0; i < 20; i++ {
 		err := d.sh("vim-cmd", "vmsvc/power.on", d.vmId)
 		if err != nil {
+			log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Start d.sh vim-cmd vmsvc/power.on error")
 			return err
 		}
 		time.Sleep((time.Duration(i) * time.Second) + 1)
 		running, err := d.IsRunning(vmxPathLocal)
 		if err != nil {
+			log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Start d.isRunning error")
 			return err
 		}
 		if running {
@@ -82,16 +87,19 @@ func (d *ESX5Driver) Start(vmxPathLocal string, headless bool) error {
 }
 
 func (d *ESX5Driver) Stop(vmxPathLocal string) error {
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Stop returning d.sh vim-cmd vmsvc/power.off...")
 	return d.sh("vim-cmd", "vmsvc/power.off", d.vmId)
 }
 
 func (d *ESX5Driver) Register(vmxPathLocal string) error {
 	vmxPath := filepath.ToSlash(filepath.Join(d.outputDir, filepath.Base(vmxPathLocal)))
 	if err := d.upload(vmxPath, vmxPathLocal); err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Register upload error")
 		return err
 	}
 	r, err := d.run(nil, "vim-cmd", "solo/registervm", vmxPath)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Register vim-cmd solo/registervm error")
 		return err
 	}
 	d.vmId = strings.TrimRight(r, "\n")
@@ -103,16 +111,19 @@ func (d *ESX5Driver) SuppressMessages(vmxPath string) error {
 }
 
 func (d *ESX5Driver) Unregister(vmxPathLocal string) error {
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Unregister returning d.sh vim-cmd vmsvc/unregister...")
 	return d.sh("vim-cmd", "vmsvc/unregister", d.vmId)
 }
 
 func (d *ESX5Driver) Destroy() error {
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go Unregister returning d.sh vim-cmd vmsvc/destroy...")
 	return d.sh("vim-cmd", "vmsvc/destroy", d.vmId)
 }
 
 func (d *ESX5Driver) IsDestroyed() (bool, error) {
 	err := d.sh("test", "!", "-e", d.outputDir)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go IsDestroyed test d.outputDir error")
 		return false, err
 	}
 	return true, err
@@ -121,6 +132,7 @@ func (d *ESX5Driver) IsDestroyed() (bool, error) {
 func (d *ESX5Driver) UploadISO(localPath string, checksum string, checksumType string) (string, error) {
 	finalPath := d.cachePath(localPath)
 	if err := d.mkdir(filepath.ToSlash(filepath.Dir(finalPath))); err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go UploadISO mkdir error")
 		return "", err
 	}
 
@@ -131,6 +143,7 @@ func (d *ESX5Driver) UploadISO(localPath string, checksum string, checksumType s
 	}
 
 	if err := d.upload(finalPath, localPath); err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go UploadISO upload error")
 		return "", err
 	}
 
@@ -170,10 +183,12 @@ func (d *ESX5Driver) HostIP() (string, error) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", d.Host, d.Port))
 	defer conn.Close()
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go HostIP net.Dial error")
 		return "", err
 	}
 
 	host, _, err := net.SplitHostPort(conn.LocalAddr().String())
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go HostIP returning net.SplitHostPort...")
 	return host, err
 }
 
@@ -242,11 +257,13 @@ func (d *ESX5Driver) CommHost(state multistep.StateBag) (string, error) {
 
 	r, err := d.esxcli("network", "vm", "list")
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go CommHost d.esxcli network vm list error")
 		return "", err
 	}
 
 	record, err := r.find("Name", config.VMName)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go CommHost d.esxcli r.find Name error")
 		return "", err
 	}
 	wid := record["WorldID"]
@@ -256,11 +273,13 @@ func (d *ESX5Driver) CommHost(state multistep.StateBag) (string, error) {
 
 	r, err = d.esxcli("network", "vm", "port", "list", "-w", wid)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go CommHost d.esxcli network vm port list error")
 		return "", err
 	}
 
 	record, err = r.read()
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go CommHost r.read error")
 		return "", err
 	}
 
@@ -283,8 +302,10 @@ func (d *ESX5Driver) DirExists() (bool, error) {
 }
 
 func (d *ESX5Driver) ListFiles() ([]string, error) {
+	log.Printf("XXX Berne: driver_esx5.go ESX5Driver ListFiles: %s", d.outputDir)
 	stdout, err := d.ssh("ls -1p "+d.outputDir, nil)
 	if err != nil {
+		log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go ListFiles d.ssh ls -1p error")
 		return nil, err
 	}
 
@@ -302,22 +323,27 @@ func (d *ESX5Driver) ListFiles() ([]string, error) {
 		files = append(files, filepath.ToSlash(filepath.Join(d.outputDir, string(line))))
 	}
 
+	log.Printf("XXX Berne: driver_esx5.go ESX5Driver ListFiles: %d files, %v", len(files), files)
 	return files, nil
 }
 
 func (d *ESX5Driver) MkdirAll() error {
+	log.Printf("XXX Berne: builder/vmware/iso/driver_esx5.go MkdirAll returning d.mkdir...")
 	return d.mkdir(d.outputDir)
 }
 
 func (d *ESX5Driver) Remove(path string) error {
+	log.Printf("XXX Berne: driver_esx5.go ESX5Driver Remove %s", path)
 	return d.sh("rm", path)
 }
 
 func (d *ESX5Driver) RemoveAll() error {
+	log.Printf("XXX Berne: driver_esx5.go ESX5Driver RemoveAll %s", d.outputDir)
 	return d.sh("rm", "-rf", d.outputDir)
 }
 
 func (d *ESX5Driver) SetOutputDir(path string) {
+	log.Printf("XXX Berne: driver_esx5.go ESX5Driver SetOutputDir %s", path)
 	d.outputDir = d.datastorePath(path)
 }
 
@@ -437,6 +463,7 @@ func (d *ESX5Driver) verifyChecksum(ctype string, hash string, file string) bool
 func (d *ESX5Driver) ssh(command string, stdin io.Reader) (*bytes.Buffer, error) {
 	var stdout, stderr bytes.Buffer
 
+	log.Printf("XXX Berne: driver_esx5.go ssh remote command: %s", command)
 	cmd := &packer.RemoteCmd{
 		Command: command,
 		Stdout:  &stdout,

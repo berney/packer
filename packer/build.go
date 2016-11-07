@@ -230,6 +230,7 @@ func (b *coreBuild) Run(originalUi Ui, cache Cache) ([]Artifact, error) {
 
 	errors := make([]error, 0)
 	keepOriginalArtifact := len(b.postProcessors) == 0
+	log.Printf("XXX Berne: keepOriginalArtifact: %v", keepOriginalArtifact)
 
 	// Run the post-processors
 PostProcessorRunSeqLoop:
@@ -243,6 +244,7 @@ PostProcessorRunSeqLoop:
 
 			builderUi.Say(fmt.Sprintf("Running post-processor: %s", corePP.processorType))
 			artifact, keep, err := corePP.processor.PostProcess(ppUi, priorArtifact)
+			log.Printf("XXX Berne: corPP.processor.PostProcess returned keep: %v", keep)
 			if err != nil {
 				errors = append(errors, fmt.Errorf("Post-processor failed: %s", err))
 				continue PostProcessorRunSeqLoop
@@ -253,7 +255,9 @@ PostProcessorRunSeqLoop:
 				continue PostProcessorRunSeqLoop
 			}
 
+			old_keep := keep
 			keep = keep || corePP.keepInputArtifact
+			log.Printf("XXX Berne: keep %v || corePP.keepInputArtifact %v = %v", old_keep, corePP.keepInputArtifact, keep)
 			if i == 0 {
 				// This is the first post-processor. We handle deleting
 				// previous artifacts a bit different because multiple
@@ -286,6 +290,7 @@ PostProcessorRunSeqLoop:
 		}
 	}
 
+	log.Printf("XXX Berne: keepOriginalArtifact: %v", keepOriginalArtifact)
 	if keepOriginalArtifact {
 		artifacts = append(artifacts, nil)
 		copy(artifacts[1:], artifacts)

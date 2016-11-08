@@ -24,8 +24,10 @@ var (
 
 // Copies a file by copying the contents of the file to another place.
 func CopyContents(dst, src string) error {
+	log.Printf("XXX Berne: CopyContents %s => %s", src, dst)
 	srcF, err := os.Open(src)
 	if err != nil {
+		log.Printf("XXX Berne: CopyContents error opening src: %v", src)
 		return err
 	}
 	defer srcF.Close()
@@ -34,20 +36,24 @@ func CopyContents(dst, src string) error {
 	if dstDir != "" {
 		err := os.MkdirAll(dstDir, os.ModePerm)
 		if err != nil {
+			log.Printf("XXX Berne: CopyContents error making destination directory: %v", dstDir)
 			return err
 		}
 	}
 
 	dstF, err := os.Create(dst)
 	if err != nil {
+		log.Printf("XXX Berne: CopyContents error making dst: %v", dstDir)
 		return err
 	}
 	defer dstF.Close()
 
 	if _, err := io.Copy(dstF, srcF); err != nil {
+		log.Printf("XXX Berne: CopyContents error copying src: %v => dst: %v", srcF, dstF)
 		return err
 	}
 
+	log.Printf("XXX Berne: CopyContents all good copying: %v => dst: %v, returning nil", srcF, dstF)
 	return nil
 }
 
